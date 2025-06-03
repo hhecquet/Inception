@@ -1,0 +1,46 @@
+#version: '3.8'
+services:
+
+  nginx:
+    build:
+      context: requirements/nginx
+      dockerfile: Dockerfile
+    ports:
+      - "443:443"
+    networks:
+      - inception_network
+    volumes:
+      - wordpress_data:/var/www/html
+
+  wordpress:
+    build:
+      context: requirements/wordpress
+      dockerfile: Dockerfile
+    ports:
+        - "9000:9000"
+    networks:
+      - inception_network
+    volumes:
+      - wordpress_data:/var/www/html
+
+  mariadb:
+    build:
+      context: requirements/mariadb
+      dockerfile: Dockerfile
+    ports:
+      - "3306:3306"
+    networks:
+      - inception_network
+    volumes:
+      - mariadb_data:/var/lib/mysql
+
+
+volumes:
+  wordpress_data:
+    driver: local
+  mariadb_data:
+    driver: local
+
+networks:
+  inception_network:
+    driver: bridge
