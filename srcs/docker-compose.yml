@@ -1,46 +1,81 @@
-#version: '3.8'
 services:
-
-  nginx:
+  mariadb:
     build:
-      context: requirements/nginx
+      context: ./requirements/mariadb
       dockerfile: Dockerfile
-    ports:
-      - "443:443"
+    restart: unless-stopped
+    container_name: mariadb
     networks:
-      - inception_network
+      - inception-net
     volumes:
-      - wordpress_data:/var/www/html
+      - db_data:/var/lib/mysql
+    secrets:
+      - mariadb_root_password
+      - mariadb_password
+    environment:
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/mariadb_root_password
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD_FILE: /run/secrets/mariadb_password
 
   wordpress:
     build:
-      context: requirements/wordpress
+      context: ./requirements/wordpress
       dockerfile: Dockerfile
-    ports:
-        - "9000:9000"
+    restart: unless-stopped
+    container_name: wordpress
+    depends_on:
+      - mariadb
     networks:
-      - inception_network
+      - inception-net
     volumes:
-      - wordpress_data:/var/www/html
+      - wp_data:/var/www/html
+    secrets:
+      - mariadb_password
+      - wp_admin_password
+    environment:
+      WORDPRESS_DB_HOST: mariadb
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: /run/secrets/mariadb_password
+      DOMAIN_NAME: ${DOMAIN_NAME}
+      WP_SITE_TITLE: ${WP_SITE_TITLE}
+      WP_ADMIN_USER: ${WP_ADMIN_USER}
+      WP_ADMIN_EMAIL: ${WP_ADMIN_EMAIL}
+      WP_ADMIN_PASSWORD: /run/secrets/wp_admin_password
 
-  mariadb:
+  nginx:
     build:
-      context: requirements/mariadb
+      context: ./requirements/nginx
       dockerfile: Dockerfile
-    ports:
-      - "3306:3306"
+      args:
+        DOMAIN_NAME: ${DOMAIN_NAME}
+    image: nginx
+    restart: unless-stopped
+    container_name: nginx
+    depends_on:
+      - wordpress
     networks:
-      - inception_network
+      - inception-net
     volumes:
-      - mariadb_data:/var/lib/mysql
-
-
-volumes:
-  wordpress_data:
-    driver: local
-  mariadb_data:
-    driver: local
+      - wp_data:/var/www/html
+    ports:
+      - "${NGINX_HOST_PORT}:443"
 
 networks:
-  inception_network:
+  inception-net:
     driver: bridge
+
+volumes:
+  db_data:
+    driver: local
+  wp_data:
+    driver: local
+
+secrets:
+  mariadb_root_password:
+    file: ../../secrets/db_root_password.txt
+  mariadb_password:
+    file: ../../secrets/db_password.txt
+  wp_admin_password:
+    file: ../../secrets/credentials.txt

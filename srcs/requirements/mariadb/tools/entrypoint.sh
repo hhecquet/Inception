@@ -2,13 +2,21 @@
 set -eux
 
 # Path to the mounted data volume
-DATADIR = "/var/lib/mysql"
+DATADIR="/var/lib/mysql"
 
 # The environment variables we expect to be set:
 #   * MYSQL_ROOT_PASSWORD_FILE  (path to a secret file containing the root password)
 #   * MYSQL_DATABASE           (database name, e.g. "wordpress")
 #   * MYSQL_USER               (e.g. "wp_user")
 #   * MYSQL_PASSWORD_FILE      (path to a secret file containing the non-root user password)
+
+# Read passwords from the secret files:
+if [ -f "${MYSQL_ROOT_PASSWORD_FILE:-}" ]; then
+  ROOT_PWD=$(cat "$MYSQL_ROOT_PASSWORD_FILE")
+fi
+if [ -f "${MYSQL_PASSWORD_FILE:-}" ]; then
+  USER_PWD=$(cat "$MYSQL_PASSWORD_FILE")
+fi
 
 # If $DATADIR/mysql does not exist, this is the first time we run:
 if [ ! -d "$DATADIR/mysql" ]; then

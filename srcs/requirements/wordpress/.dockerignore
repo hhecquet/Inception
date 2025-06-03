@@ -1,0 +1,4 @@
+# Ignore any local WordPress downloads or artifacts
+latest.tar.gz
+node_modules
+*.log

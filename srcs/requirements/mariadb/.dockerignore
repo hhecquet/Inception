@@ -1,0 +1,5 @@
+# no node_modules, no temp files, etc.
+*.log
+*.bak
+# Ignore the local mysql data if you ever put it here by accident
+/var/lib/mysql

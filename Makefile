@@ -6,13 +6,16 @@
 #    By: hhecquet <hhecquet@student.42perpignan.    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/04/30 09:54:11 by hhecquet          #+#    #+#              #
-#    Updated: 2025/05/29 10:19:59 by hhecquet         ###   ########.fr        #
+#    Updated: 2025/06/03 09:00:57 by hhecquet         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 .SILENT:
 
-all: 
+all: build up
+
+build:
+	docker compose -f srcs/docker-compose.yml build
 
 up:
 	docker compose up -d --build
@@ -20,7 +23,7 @@ up:
 down:
 	docker compose down
 
-clean:
+clean: down
 	docker stop $(shell docker ps -qa); docker rm $(shell docker ps -qa); docker rmi -f $(shell docker images -qa); docker volume rm $(shell docker volume ls -q); docker network rm $(shell docker network ls -q) 2>/dev/null
 
 fclean: clean
